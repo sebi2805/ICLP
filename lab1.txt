@@ -1,0 +1,2 @@
+fiecare proces reprezinta un PCB , process control blocks
+proces cu memorie virtualizata 
