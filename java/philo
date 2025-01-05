@@ -1,0 +1,95 @@
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class Main {
+
+    public static void main(String[] args) throws InterruptedException {
+        Philosopher[] philosophers = new Philosopher[5];
+        ReentrantLock table = new ReentrantLock();
+
+        // Inițializarea filosofilor
+        for (int i = 0; i < 5; ++i)
+            philosophers[i] = new Philosopher("Phil" + i, table);
+
+        // Setăm vecinii stânga și dreapta și pornim firele de execuție
+        for (int i = 0; i < 5; ++i) {
+            philosophers[i].setLeft(philosophers[(i + 4) % 5]);
+            philosophers[i].setRight(philosophers[(i + 1) % 5]);
+            philosophers[i].start();
+        }
+
+        // Așteptăm finalizarea firelor
+        for (int i = 0; i < 5; ++i)
+            philosophers[i].join();
+    }
+}
+
+class Philosopher extends Thread {
+    private String name;
+    private boolean eating;
+    private Philosopher left, right;
+    private ReentrantLock table;
+    private Condition condition;
+
+    public Philosopher(String name, ReentrantLock table) {
+        this.name = name;
+        this.table = table;
+        this.condition = table.newCondition();
+        this.eating = false;
+    }
+
+    public void setLeft(Philosopher left) {
+        this.left = left;
+    }
+
+    public void setRight(Philosopher right) {
+        this.right = right;
+    }
+
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                think();
+                eat();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void eat() throws InterruptedException {
+        table.lock();
+        try {
+            // Așteaptă până când vecinii nu mănâncă
+            while (left.eating || right.eating) {
+                condition.await();
+            }
+            eating = true;
+        } finally {
+            table.unlock();
+        }
+
+        // Simulează mâncatul
+        System.out.println(name + " is eating");
+        Thread.sleep(ThreadLocalRandom.current().nextInt(1000));
+
+    }
+
+    private void think() throws InterruptedException {
+        table.lock();
+        try {
+            eating = false;
+            // Semnalizează vecinilor că pot încerca să mănânce
+            left.condition.signal();
+            right.condition.signal();
+        } finally {
+            table.unlock();
+        }
+
+        // Simulează gânditul
+        System.out.println(name + " is thinking");
+        Thread.sleep(ThreadLocalRandom.current().nextInt(1000));
+    }
+}

@@ -1,0 +1,57 @@
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+
+public class ReaderWriterE {
+    private static Integer counter = 0; // Resursa partajată
+    private static final ReadWriteLock lock = new ReentrantReadWriteLock(); // Lock pentru Reader-Writer
+
+    // Task pentru scriitor (Writer)
+    static class TaskW implements Runnable {
+        @Override
+        public void run() {
+            lock.writeLock().lock(); // Obținem write lock
+            try {
+                int temp = counter;
+                counter += 5; // Scrie în resursă
+                System.out.println(Thread.currentThread().getName() +
+                        " - before: " + temp + " after: " + counter);
+                Thread.sleep(1000); // Simulează timpul necesar scrierii
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.writeLock().unlock(); // Eliberăm write lock
+            }
+        }
+    }
+
+    // Task pentru cititor (Reader)
+    static class TaskR implements Runnable {
+        @Override
+        public void run() {
+            lock.readLock().lock(); // Obținem read lock
+            try {
+                System.out.println(Thread.currentThread().getName() +
+                        " counter: " + counter); // Citește valoarea counter
+                Thread.sleep(300); // Simulează timpul necesar citirii
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.readLock().unlock(); // Eliberăm read lock
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService pool = Executors.newCachedThreadPool();
+
+        // Rulează scriitori și cititori
+        pool.execute(new TaskW());
+        pool.execute(new TaskR());
+        pool.execute(new TaskW());
+        pool.execute(new TaskR());
+        pool.execute(new TaskR());
+        pool.execute(new TaskW());
+
+        pool.shutdown(); // Închidem thread pool-ul
+    }
+}

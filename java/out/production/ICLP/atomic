@@ -1,0 +1,67 @@
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Main {
+    // Coada partajată între producer și consumer
+    private static BlockingQueue<Integer> queue = new LinkedBlockingQueue<>(10); // Capacitate maximă: 10
+    private static AtomicInteger itemCount = new AtomicInteger(0); // Numără elementele produse
+
+    // Producătorul
+    static class Producer implements Runnable {
+        private String name;
+
+        Producer(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    int item = itemCount.incrementAndGet(); // Creștere atomică
+                    System.out.println(name + " produced item: " + item);
+                    queue.put(item); // Adaugă în coadă
+                    Thread.sleep(500); // Simulează timpul de producție
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    // Consumatorul
+    static class Consumer implements Runnable {
+        private String name;
+
+        Consumer(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    int item = queue.take(); // Scoate din coadă
+                    System.out.println(name + " consumed item: " + item);
+                    Thread.sleep(1000); // Simulează timpul de consum
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        // Pornirea thread-urilor pentru producători și consumatori
+        Thread producer1 = new Thread(new Producer("Producer-1"));
+        Thread producer2 = new Thread(new Producer("Producer-2"));
+        Thread consumer1 = new Thread(new Consumer("Consumer-1"));
+        Thread consumer2 = new Thread(new Consumer("Consumer-2"));
+
+        producer1.start();
+        producer2.start();
+        consumer1.start();
+        consumer2.start();
+    }
+}

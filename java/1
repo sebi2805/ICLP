@@ -2,14 +2,14 @@ public class Main
 {
     private Object resource1 = new Object();
     private Object resource2 = new Object();
-    
+
     public void method1() {
         synchronized (resource1) {
             System.out.println("1 - sync Resource 1");
             try {
                 Thread.sleep(100);
             }
-            catch (InterruptedException ex) {
+            catch (InterruptedException ex) {QQ
                 ex.printStackTrace();
             }
             synchronized (resource2) {
@@ -17,7 +17,7 @@ public class Main
             }
         }
     }
-    
+
     public void method2() {
         synchronized (resource2) {
             System.out.println("2 - sync Resource 2");
@@ -32,9 +32,9 @@ public class Main
             }
         }
     }
-    
+
 	public static void main(String[] args) {
-		Main main = new Main(); 
+		Main main = new Main();
 		Thread t1 = new Thread(main::method1);
 		Thread t2 = new Thread(main::method2);
 		t1.start();
@@ -42,4 +42,3 @@ public class Main
 	}
 }
 
- 

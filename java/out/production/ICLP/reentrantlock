@@ -1,0 +1,72 @@
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Main {
+    private final Lock lock1 = new ReentrantLock();
+    private final Lock lock2 = new ReentrantLock();
+
+    private void method1() throws InterruptedException {
+        if (lock1.tryLock()) {
+            try {
+                System.out.println("Locked obj1 in method1");
+                Thread.sleep(1000);
+                if (lock2.tryLock()) {
+                    try {
+                        System.out.println("Locked obj2 in method1");
+                    } finally {
+                        lock2.unlock();
+                    }
+                }
+            } finally {
+                lock1.unlock();
+            }
+        }
+    }
+
+    private void method2() throws InterruptedException {
+        if (lock2.tryLock()) {
+            try {
+                System.out.println("Locked obj2 in method2");
+                Thread.sleep(1000);
+                if (lock1.tryLock()) {
+                    try {
+                        System.out.println("Locked obj1 in method2");
+                    } finally {
+                        lock1.unlock();
+                    }
+                }
+            } finally {
+                lock2.unlock();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Main m = new Main();
+        Thread t1 = new Thread(() -> {
+            try {
+                m.method1();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        Thread t2 = new Thread(() -> {
+            try {
+                m.method2();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}

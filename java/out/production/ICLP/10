@@ -1,0 +1,86 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+
+
+class Resource {
+    private List<String> messages = new ArrayList<>(List.of("Hello", "World", "END"));
+    private Lock lock = new ReentrantLock();
+    private Condition notFull = lock.newCondition();
+    private Condition notEmpty = lock.newCondition();
+    private boolean isFull = false;
+    private String message;
+    public void produce() throws InterruptedException {
+        lock.lock();
+
+        for (String msg : messages) {
+            while (isFull) {
+                notFull.await();
+            }
+            message = msg;
+            isFull = true;
+            notEmpty.signal();
+        }
+        lock.unlock();
+    }
+
+    public void consume() throws InterruptedException {
+        lock.lock();
+        try {
+            while (true) {
+                while (!isFull) {
+                    notEmpty.await();
+                }
+                if ("END".equals(message)) {
+                    System.out.println(message);
+                    break;
+                }
+                System.out.println(message);
+                message = null;
+                isFull = false;
+                notFull.signal();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Resource r = new Resource();
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    r.produce();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    r.consume();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}

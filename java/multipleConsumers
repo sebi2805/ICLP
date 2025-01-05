@@ -1,0 +1,105 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+class Resource {
+    private List<String> messages = new ArrayList<>(List.of("Hello", "World", "!", "Foo", "Bar"));
+    private final List<String> buffer = new ArrayList<>();
+    private final Lock lock = new ReentrantLock();
+    private final Condition notFull = lock.newCondition();
+    private final Condition notEmpty = lock.newCondition();
+    private final int CAPACITY = 3; // capacitatea maximă a bufferului
+
+    public Resource(int numConsumers) {
+        for (int i = 0; i < numConsumers; i++) {
+            messages.addLast("END");
+        }
+    }
+    public void produce() throws InterruptedException {
+        Random rand = new Random();
+        for (String msg : messages) {
+            lock.lock();
+            try {
+                while (buffer.size() == CAPACITY) {
+                    notFull.await();
+                }
+                buffer.add(msg);
+                notEmpty.signalAll();
+            } finally {
+                lock.unlock();
+            }
+            Thread.sleep(rand.nextInt(500) + 200); // sleep random
+        }
+    }
+
+    public void consume(int consumerId) throws InterruptedException {
+        Random rand = new Random();
+        while (true) {
+            lock.lock();
+            String msg = null;
+            try {
+                while (buffer.isEmpty()) {
+                    notEmpty.await();
+                }
+                msg = buffer.remove(0);
+                notFull.signalAll();
+            } finally {
+                lock.unlock();
+            }
+
+            // Dacă e mesaj de terminare, ne oprim
+            if ("END".equals(msg)) {
+                System.out.println("Consumer " + consumerId + " got END and stops.");
+                break;
+            }
+            System.out.println("Consumer " + consumerId + " got message: " + msg);
+            Thread.sleep(rand.nextInt(500) + 200); // sleep random
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Resource r = new Resource(2);
+
+        Thread producer = new Thread(() -> {
+            try {
+                r.produce();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // Creăm mai mulți consumatori
+        Thread consumer1 = new Thread(() -> {
+            try {
+                r.consume(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        Thread consumer2 = new Thread(() -> {
+            try {
+                r.consume(2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        producer.start();
+        consumer1.start();
+        consumer2.start();
+
+        try {
+            producer.join();
+            consumer1.join();
+            consumer2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
