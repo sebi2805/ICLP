@@ -1,0 +1,38 @@
+fridgef(FoodList) ->
+    receive
+        % comanda store
+        % comanda take
+        ....
+    end.
+
+store(Pid, Food) ->
+    Pid ! {self(), {store, Food}},
+    receive
+        {Pid, Msg} -> Msg
+    end.
+
+take(Pid, Food) ->
+    Pid ! {self(), {take, Food}},
+    receive
+        {Pid, Msg} -> Msg
+    end.
+
+fridgef(FoodList) ->
+    receive
+        {From, {store, Food}} ->
+            From ! {self(), ok},
+            fridgef([Food | FoodList]);
+
+        {From, {take, Food}} ->
+            case lists:member(Food, FoodList) of
+                true ->
+                    From ! {self(), {ok, Food}},
+                    fridgef(lists:delete(Food, FoodList));
+                false ->
+                    From ! {self(), not_found},
+                    fridgef(FoodList)
+            end;
+
+        terminate ->
+            ok
+    end.

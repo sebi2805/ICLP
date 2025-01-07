@@ -1,0 +1,19 @@
+-module(servtemplate1).
+-compile(export_all). % exportă toate funcțiile
+
+start_server() -> 
+    spawn(?MODULE, server_loop, []).
+
+client(Pid, Request) ->
+    Pid ! {self(), Request},
+    receive
+        {Pid, Response} -> Response
+    end.
+
+server_loop() ->
+    receive
+        .....
+        {From, Request} ->
+            From ! {self(), Response},
+            server_loop()
+    end.
