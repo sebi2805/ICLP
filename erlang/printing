@@ -1,0 +1,9 @@
+Cum funcționează io:format/2?
+io:format/2 este o funcție din modulul io care se ocupă de afișarea textului în terminal. Este similară cu funcția printf din C sau console.log din JavaScript, dar este adaptată pentru modelul funcțional și concurațional al Erlang.
+
+Sintaxă:
+erlang
+Copy code
+io:format(FormatString, ListaArgumente).
+
+io:format("Am primit răspuns: ~p~n", [Reply]).

@@ -1,0 +1,21 @@
+În prima imagine:
+
+5 =:= 5.0 → false
+Operatorul =:= compară strict tipul și valoarea. Aici, 5 este un număr întreg, iar 5.0 este un număr zecimal, deci rezultatul este false.
+
+5 == 5.0 → true
+Operatorul == compară doar valorile, ignorând tipul. Aici, 5 și 5.0 au aceeași valoare numerică.
+
+5 =/= 5.0 → true
+Operatorul =/= verifică dacă tipul sau valoarea sunt diferite. Deoarece 5 și 5.0 au tipuri diferite, rezultatul este true.
+
+5 /= 5.0 → false
+Operatorul /= verifică doar valoarea, deci rezultatul este false, deoarece valorile sunt egale.
+
+Exemplu de cod pentru clarificare:
+erlang
+Copy code
+io:format("5 =:= 5.0 -> ~p~n", [5 =:= 5.0]), % false
+io:format("5 == 5.0 -> ~p~n", [5 == 5.0]),   % true
+io:format("5 =/= 5.0 -> ~p~n", [5 =/= 5.0]), % true
+io:format("5 /= 5.0 -> ~p~n", [5 /= 5.0]).   % false

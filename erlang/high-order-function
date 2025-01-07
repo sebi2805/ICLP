@@ -1,0 +1,18 @@
+% 1. Definirea unei liste
+L = [1, 2, 3].
+
+% 2. Aplicarea unei funcții anonime cu map/2
+lists:map(fun(X) -> X + 1 end, L).
+
+% 3. Definirea unei funcții și reutilizarea cu map/2
+Inc = fun(X) -> X + 1 end.
+lists:map(Inc, L).
+
+% 4. Reducerea listei folosind foldl/3
+lists:foldl(fun(X, Y) -> X + Y end, 0, L).
+
+% 5. Combinarea a două liste cu zip/2
+Pair = lists:zip([1, 2, 3], [a, b, c]).
+
+% 6. Separarea listei de tupluri cu unzip/1
+lists:unzip(Pair).

@@ -1,0 +1,37 @@
+-module(main).
+-export([start/0, ping/1, pong/1, pong/2, outputAccess/0]).
+
+
+start() ->
+    OutputPid = spawn(main, outputAccess, []),
+    Ping = spawn(main, ping, [OutputPid]),
+    spawn(main, pong, [Ping, OutputPid]),
+    ok.
+
+ping(OutputPid) ->
+    receive 
+        {Pong, Msg} -> OutputPid ! Msg,
+                        timer:sleep(1000),
+                        Pong ! {self(), "ping"},
+                        ping(OutputPid)
+    end.
+
+
+pong(OutputPid) ->
+    receive 
+        {Ping, Msg} -> OutputPid ! Msg,
+                        timer:sleep(1000),
+                        Ping ! {self(), "pong"},
+                        pong(OutputPid)
+    end.
+
+pong(Ping, OutputPid) ->
+    Ping ! {self(), "pong"},
+    pong(OutputPid).
+
+
+outputAccess() ->
+    receive
+        Msg -> io:format("~p ~n", [Msg]),
+                outputAccess()
+    end.

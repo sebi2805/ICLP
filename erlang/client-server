@@ -1,0 +1,13 @@
+-module(myserv).
+-export([server_loop/0]).
+
+% Funcția principală a serverului
+server_loop() ->
+    receive
+        {From, {double, N}} when is_integer(N) ->
+            From ! {self(), 2 * N},
+            server_loop(); % Continuă să asculte mesaje
+        {From, _} ->
+            From ! {self(), error},
+            server_loop() % Continuă să asculte mesaje
+    end.

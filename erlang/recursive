@@ -1,0 +1,26 @@
+loop() ->
+    receive
+        {Sender, Message} ->
+            io:format("Primit: ~p~n", [Message]),
+            Sender ! {ok, "Mesaj primit"},
+            loop() % Apelează recursiv pentru a continua să primească mesaje
+    end.
+
+
+
+    deci poti sa faci recursiv acel receive astfel incat sa astepti non stop Message
+
+
+    start() ->
+    io:format("Aștept un mesaj timp de 5 secunde...~n"),
+    receive
+        Message -> io:format("Am primit mesajul: ~p~n", [Message])
+    after 5000 -> % Timeout în milisecunde
+        io:format("Timpul a expirat.~n")
+    end.
+    poti sa pui si timeout
+
+    Într-un proces separat, pentru a asculta mesaje în mod continuu (folosind recursivitate).
+Temporar, pentru a primi un singur mesaj într-o funcție specifică.
+Combinat cu alte logici, pentru a crea un flux mai complex.
+Cu timeout, pentru a evita blocarea procesului la nesfârșit.

@@ -1,0 +1,39 @@
+-module(main).
+-export([start/0, do_A/0, do_B/0, thread/1, output_loop/0]).
+
+do_A() ->
+    "Am facut A".
+
+do_B() ->
+    "Am facut B".
+
+start() ->
+    OutputPid = spawn(main, output_loop, []),
+    Pid1 = spawn(main, thread, [OutputPid]),
+    Pid2 = spawn(main, thread, [OutputPid]),
+    Pid1 ! {do_A, "sebi"},
+    Pid2 ! {do_B, "matei"},
+    ok.
+
+thread(OutputPid) ->
+    receive
+        {do_A, Msg} ->
+            Result = do_A(),
+            OutputPid ! {self(), Result, Msg},
+            thread(OutputPid);
+        {do_B, Msg} ->
+            Result = do_B(),
+            OutputPid ! {self(), Result, Msg},
+            thread(OutputPid);
+        stop ->
+            io:format("Proces terminat~n")
+    end.
+
+output_loop() ->
+    receive
+        {Pid, Result, Msg} ->
+            io:format("Proces ~p: ~s - Mesaj: ~s~n", [Pid, Result, Msg]),
+            output_loop();
+        stop ->
+            io:format("Procesul de ieșire s-a terminat.~n")
+    end.

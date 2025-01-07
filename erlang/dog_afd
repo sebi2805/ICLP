@@ -1,0 +1,28 @@
+-module(dog_fsm).
+-export([start/0, handle_event/2]).
+
+% Starea inițială
+start() ->
+    loop(barks).
+
+% Bucla principală care gestionează tranzițiile
+loop(State) ->
+    io:format("Current state: ~p~n", [State]),
+    receive
+        {Event} ->
+            NewState = handle_event(State, Event),
+            loop(NewState)
+    end.
+
+% Tranzițiile între stări
+handle_event(barks, gets_petted) ->
+    wag_tail;
+handle_event(barks, see_squirrels) ->
+    sits;
+handle_event(wag_tail, waits) ->
+    barks;
+handle_event(sits, waits) ->
+    barks;
+handle_event(_, _) ->
+    io:format("Invalid event in state: ~p~n", [_]),
+    barks.

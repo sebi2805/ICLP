@@ -1,0 +1,11 @@
+-module(main).
+-export([start/0]).
+
+start () -> 
+    {ok, Number} = io:read("Care este numarul?"),
+    if Number < 0 -> io:format("Este negativ ~n");
+        Number > 0 -> io:format("Este pozitiv ~n");
+        true -> io:format("Este zero")
+    end,
+    ok.
+

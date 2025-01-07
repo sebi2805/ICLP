@@ -1,0 +1,58 @@
+-module(main).
+-export([start/0, server/0, client/2, worker/3, calls/2, wait_one/1]).
+
+% =====================
+% Funcția principală: Start
+% =====================
+start() ->
+    Server = spawn(main, server, []),  % Pornim serverul
+    Results = calls(Server, 10),       % Apelăm serverul cu 10 clienți
+    io:format("Rezultate: ~p~n", [Results]).
+
+% =====================
+% Serverul
+% =====================
+server() ->
+    receive
+        {From, {double, N}} ->
+            From ! {self(), N * 2},  % Răspundem cu dublul valorii
+            server()                 % Continuăm să ascultăm alte cereri
+    end.
+
+% =====================
+% Funcția clientului
+% =====================
+client(Pid, Message) ->
+    Pid ! {self(), Message},          % Trimitem mesajul către server
+    receive
+        {Pid, Response} -> Response   % Așteptăm răspunsul serverului
+    end.
+
+% =====================
+% Worker: Proces individual pentru fiecare cerere
+% =====================
+worker(Parent, Pid, Number) ->
+    spawn(fun() ->
+        Result = client(Pid, {double, Number}), % Clientul trimite cererea și primește răspuns
+        Parent ! {self(), Result}               % Trimitem rezultatul către parent
+    end).
+
+% =====================
+% Apelurile către server
+% =====================
+calls(Pid, N) ->
+    Parent = self(),                           % PID-ul procesului curent (parent)
+    Pids = [worker(Parent, Pid, X) || X <- lists:seq(1, N)], % Creează N procese worker
+    [wait_one(P) || P <- Pids].                % Așteaptă răspunsurile de la fiecare worker
+
+% =====================
+% Așteptarea unui răspuns de la un worker
+% =====================
+wait_one(Pid) ->
+    receive
+        {Pid, Response} -> Response            % Așteptăm un mesaj de la procesul Pid
+    end.
+
+
+
+## deci ideea e ca il facem blocant atunci cand asteptam cu wait one ca sa avem ce sa returnam

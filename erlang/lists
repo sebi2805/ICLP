@@ -1,0 +1,50 @@
+% Exerciții cu liste
+
+% 1. Concatenare liste
+% Această funcție concatenează două liste folosind operatorul ++.
+concat_lists(List1, List2) ->
+    List1 ++ List2.
+
+% 2. Diferența dintre liste
+% Această funcție elimină elementele comune dintre două liste folosind operatorul --.
+list_difference(List1, List2) ->
+    List1 -- List2.
+
+% 3. Construcție listă cu operatorul `|`
+% Adaugă un element la începutul unei liste.
+add_to_list(Element, List) ->
+    [Element | List].
+
+% 4. Parcurgere listă recursivă
+% Calculează suma elementelor dintr-o listă folosind recursivitate.
+sum_list([]) -> 0;
+sum_list([H | T]) -> H + sum_list(T).
+
+% Exerciții cu tupluri
+
+% 5. Accesarea elementelor unui tuplu
+% Primește un tuplu de forma {X, Y} și returnează suma celor două elemente.
+sum_tuple({X, Y}) ->
+    X + Y.
+
+% 6. Tupluri etichetate
+% Primește un tuplu etichetat (ex. {tag, {X, Y}}) și returnează suma valorilor din interior.
+sum_tagged_tuple({tag, {X, Y}}) ->
+    X + Y.
+
+% 7. Transformare între liste și tupluri
+% Transformă o listă cu două elemente într-un tuplu.
+list_to_tuple([X, Y]) ->
+    {X, Y}.
+
+% 8. Actualizare element într-un tuplu
+% Actualizează al doilea element al unui tuplu {X, Y} cu o valoare nouă.
+update_tuple({X, _}, NewY) ->
+    {X, NewY}.
+
+% Exerciții combinate
+
+% 9. Listă de tupluri
+% Primește o listă de tupluri și returnează suma primelor elemente din fiecare tuplu.
+sum_first_elements([]) -> 0;
+sum_first_elements([{X, _} | T]) -> X + sum_first_elements(T).

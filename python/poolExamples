@@ -1,0 +1,50 @@
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+# Funcție care simulează o operație I/O-bound
+def download_file(file_id):
+    print(f"Downloading file {file_id}...")
+    time.sleep(2)  # Simulează o întârziere
+    print(f"File {file_id} downloaded.")
+    return f"File {file_id} content"
+
+# Creăm un ThreadPoolExecutor
+with ThreadPoolExecutor(max_workers=3) as executor:
+    file_ids = [1, 2, 3, 4, 5]
+    results = executor.map(download_file, file_ids)
+
+print("All files downloaded.")
+
+from multiprocessing import Manager, Process
+
+def worker(shared_list, value):
+    shared_list.append(value)
+    print(f"Added {value} to shared list.")
+
+if __name__ == "__main__":
+    manager = Manager()
+    shared_list = manager.list()  # Listă partajată
+
+    processes = []
+    for i in range(5):
+        p = Process(target=worker, args=(shared_list, i))
+        processes.append(p)
+        p.start()
+
+    for p in processes:
+        p.join()
+
+    print("Shared list:", list(shared_list))
+
+from multiprocessing import Pool
+
+# Funcție care calculează pătratul unui număr
+def calculate_square(number):
+    return number * number
+
+if __name__ == "__main__":
+    numbers = [1, 2, 3, 4, 5]
+    with Pool(processes=3) as pool:
+        results = pool.map(calculate_square, numbers)
+
+    print("Squares:", results)
