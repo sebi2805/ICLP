@@ -1,0 +1,66 @@
+import java.util.concurrent.ThreadLocalRandom;
+
+class Chopstick {
+    private int id;
+
+    public Chopstick(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+
+class Philosopher extends Thread {
+    private String name;
+    private Chopstick first, second;
+
+    public Philosopher(String name, Chopstick left, Chopstick right) {
+        this.name = name;
+        this.first = left;
+        this.second = right; // Ia furculițele
+    }
+
+    public void run() {
+        try {
+            while (true) {
+                System.out.println(name + " is hungry."); // Vrea să mănânce
+                synchronized (first) {
+                    synchronized (second) {
+                        System.out.println(name + " is eating."); // Mănâncă
+                        Thread.sleep(ThreadLocalRandom.current().nextInt(1000)); // Simulează mâncatul
+                    }
+                }
+                System.out.println(name + " is thinking."); // Gândește
+                Thread.sleep(ThreadLocalRandom.current().nextInt(10000)); // Simulează gândirea
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+public class DiningPhilosophers {
+    public static void main(String[] args) throws InterruptedException {
+        Philosopher[] philosophers = new Philosopher[5];
+        Chopstick[] chopsticks = new Chopstick[5];
+
+        for (int i = 0; i < 5; ++i) {
+            chopsticks[i] = new Chopstick(i);
+        }
+
+        for (int i = 0; i < 5; ++i) {
+            philosophers[i] = new Philosopher(
+                    "Phil" + i,
+                    chopsticks[i],
+                    chopsticks[(i + 1) % 5]
+            );
+            philosophers[i].start();
+        }
+
+        for (int i = 0; i < 5; ++i) {
+            philosophers[i].join();
+        }
+    }
+}

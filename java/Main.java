@@ -1,79 +1,76 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingDeque;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
-class Philosopher extends Thread {
-    BlockingDeque<Philosopher> deque = new BlockingDeque<Philosopher>(10);
-    private static int count = 0;
-    private int index;
-    private Philosopher left;
-    private Philosopher right;
-    private ReentrantLock lock = new ReentrantLock();
-    public Condition notEating = lock.newCondition();
-    public boolean isEating = false;
-    public Philosopher() {
-        count += 1;
-        index = count;
-    }
-    public void setLeft(Philosopher left) {
-        this.left = left;
-    }
-    public void setRight(Philosopher right) {
-        this.right = right;
+class Drop {
+    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private LinkedList<String> messages = new LinkedList<>();
+
+    public void write(String message) {
+        lock.writeLock().lock();
+        messages.add(message);
+        lock.writeLock().unlock();
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            lock.lock();
-            while (left.isEating || right.isEating) {
+    public String read(){
+        lock.readLock().lock();
+        var msg = messages.poll();
+        lock.readLock().unlock();
+        return msg;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        Drop drop = new Drop();
+
+        Thread t1 = new Thread(()->{
+            while(true){
+               drop.write(Thread.currentThread().getName() + new Random().nextInt());
                 try {
-                    left.notEating.await();
-                    right.notEating.await();
+                    Thread.sleep(new Random().nextInt(100, 300));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
-            isEating = true;
-            System.out.println("Philosopher " + index + " is eating");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        });
+
+        Thread t2 = new Thread(()->{
+            while(true){
+                var msg = drop.read();
+                System.out.println(msg);
+                try {
+                    Thread.sleep(new Random().nextInt(50, 150));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            isEating = false;
-            notEating.signal();
+        });
 
-            lock.unlock();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        Thread t3 = new Thread(()->{
+            while(true){
+                var msg = drop.read();
+                System.out.println(msg);
+                try {
+                    Thread.sleep(new Random().nextInt(50, 150));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            System.out.println("Philosopher " + index + " is thinking");
+        });
 
-        }
-    }
-}
-public class Main {
-    public static void main(String[] args) throws Exception {
-        List<Philosopher> philosophers = new ArrayList<Philosopher>();
-        for (int i = 0; i < 5; i++) {
-            philosophers.add(new Philosopher());
-        }
-        for (int i = 0; i < 5; i++) {
-            philosophers.get(i).setLeft(philosophers.get(i-1 < 0 ? philosophers.size()-1 : i-1));
-            philosophers.get(i).setRight(philosophers.get(i+1 > philosophers.size() - 1 ? 0 : i+1));
-        }
-        for (Philosopher p : philosophers) {
-            p.start();
-        }
+        t1.start();
+        t2.start();
+        t3.start();
 
-        for (Philosopher p : philosophers) {
-            p.join();
-        }
+        t1.join();
+        t2.join();
+        t3.join();
     }
 }

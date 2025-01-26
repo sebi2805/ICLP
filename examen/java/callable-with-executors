@@ -1,0 +1,28 @@
+import java.util.concurrent.*;
+
+public class CallableExample {
+    public static void main(String[] args) throws Exception {
+        // Creare obiect Callable
+        Callable<String> callable = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                Thread.sleep(2000); // Simulează o execuție care durează
+                return "Result from Callable";
+            }
+        };
+
+        // Crearea unui ExecutorService
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+
+        // Submitem Callable în ExecutorService
+        Future<String> future = exec.submit(callable);
+
+        // Așteptăm și obținem rezultatul din Future
+        System.out.println("Waiting for the result...");
+        String result = future.get(); // Blochează până când Callable finalizează
+        System.out.println("Result: " + result);
+
+        // Oprirea ExecutorService
+        exec.shutdown();
+    }
+}

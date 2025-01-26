@@ -1,0 +1,103 @@
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class PCDrop {
+    private Queue<String> drop = new LinkedList<>();
+    private static int Max = 5;
+
+    private Lock dlock = new ReentrantLock();
+    private Condition cond_empty = dlock.newCondition();
+    private Condition cond_full = dlock.newCondition();
+
+    public String take() {
+        dlock.lock();
+        try {
+            while (drop.size() == 0) {
+                try {
+                    cond_full.await();
+                } catch (InterruptedException ex) {
+                    // Handle exception
+                }
+            }
+            String message = drop.poll();
+            System.out.format("Buffer items: %d%n", drop.size());
+            cond_empty.signalAll();
+            return message;
+        } finally {
+            dlock.unlock();
+        }
+    }
+
+    public void put(String message) {
+        dlock.lock();
+        try {
+            while (drop.size() == Max) {
+                try {
+                    cond_empty.await();
+                } catch (InterruptedException ex) {
+                    // Handle exception
+                }
+            }
+            drop.offer(message);
+            System.out.format("Buffer items: %d%n", drop.size());
+            cond_full.signalAll();
+        } finally {
+            dlock.unlock();
+        }
+    }
+}
+
+class PCProducer implements Runnable {
+    private PCDrop drop;
+
+    public PCProducer(PCDrop drop) {
+        this.drop = drop;
+    }
+
+    public void run() {
+        Random random = new Random();
+        while (true) {
+            drop.put("Message" + random.nextInt(50));
+            try {
+                Thread.sleep(random.nextInt(50));
+            } catch (InterruptedException ex) {
+                // Handle exception
+            }
+        }
+    }
+}
+
+class PCConsumer implements Runnable {
+    private PCDrop drop;
+
+    public PCConsumer(PCDrop drop) {
+        this.drop = drop;
+    }
+
+    public void run() {
+        Random random = new Random();
+        while (true) {
+            String message = drop.take();
+            System.out.format("Message received: %s%n", message);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                // Handle exception
+            }
+        }
+    }
+}
+
+public class ProducerConsumerlockcond {
+    public static void main(String[] args) {
+        PCDrop drop = new PCDrop();
+        (new Thread(new PCProducer(drop))).start();
+        (new Thread(new PCProducer(drop))).start();
+        (new Thread(new PCConsumer(drop))).start();
+        (new Thread(new PCConsumer(drop))).start();
+        (new Thread(new PCConsumer(drop))).start();
+    }
+}

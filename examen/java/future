@@ -1,0 +1,40 @@
+import java.util.concurrent.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class CallableFuture {
+    public static void main(String[] args) throws Exception {
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+
+        int time = ThreadLocalRandom.current().nextInt(1000, 5000);
+
+        System.out.println("Creating the future");
+
+        Future<String> futureEx = pool.submit(new TaskCallable(time));
+
+        System.out.println("Do something else while callable is getting executed");
+
+        Thread.currentThread().sleep(time);
+
+        System.out.println("Retrieve the result of the future");
+
+        String result = futureEx.get();
+        System.out.println(result);
+
+        pool.shutdown();
+    }
+}
+
+class TaskCallable implements Callable<String> {
+    private int ts;
+
+    public TaskCallable(int ts) {
+        this.ts = ts;
+    }
+
+    @Override
+    public String call() throws InterruptedException {
+        System.out.println("Entered Callable; sleep: " + ts);
+        Thread.sleep(ts);
+        return "Hello from Callable";
+    }
+}

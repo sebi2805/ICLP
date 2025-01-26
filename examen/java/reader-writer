@@ -1,0 +1,48 @@
+import java.util.concurrent.locks.*;
+
+public class ReaderWriter {
+    private static Integer counter = 0; // Resursa partajată
+    private static ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    public static void main(String[] args) {
+        (new Thread(new TaskW())).start();
+        (new Thread(new TaskR())).start();
+        (new Thread(new TaskR())).start();
+        (new Thread(new TaskW())).start();
+        (new Thread(new TaskR())).start();
+        (new Thread(new TaskR())).start();
+        (new Thread(new TaskR())).start();
+        (new Thread(new TaskW())).start();
+    }
+
+    private static class TaskW implements Runnable {
+        public void run() {
+            lock.writeLock().lock(); 
+            try {
+                int temp = counter;
+                for (int i = 0; i < 5; i++) {
+                    counter++;
+                    Thread.currentThread().sleep(1); 
+                }
+                System.out.println(Thread.currentThread().getName() + 
+                                   " Writer - before: " + temp + " after: " + counter);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                lock.writeLock().unlock(); 
+            }
+        }
+    }
+
+    private static class TaskR implements Runnable {
+        public void run() {
+            lock.readLock().lock(); 
+            try {
+                System.out.println(Thread.currentThread().getName() + 
+                                   " Reader counter: " + counter);
+            } finally {
+                lock.readLock().unlock(); 
+            }
+        }
+    }
+}

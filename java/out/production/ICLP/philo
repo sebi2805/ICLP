@@ -8,18 +8,15 @@ public class Main {
         Philosopher[] philosophers = new Philosopher[5];
         ReentrantLock table = new ReentrantLock();
 
-        // Inițializarea filosofilor
         for (int i = 0; i < 5; ++i)
             philosophers[i] = new Philosopher("Phil" + i, table);
 
-        // Setăm vecinii stânga și dreapta și pornim firele de execuție
         for (int i = 0; i < 5; ++i) {
             philosophers[i].setLeft(philosophers[(i + 4) % 5]);
             philosophers[i].setRight(philosophers[(i + 1) % 5]);
             philosophers[i].start();
         }
 
-        // Așteptăm finalizarea firelor
         for (int i = 0; i < 5; ++i)
             philosophers[i].join();
     }
@@ -62,7 +59,6 @@ class Philosopher extends Thread {
     private void eat() throws InterruptedException {
         table.lock();
         try {
-            // Așteaptă până când vecinii nu mănâncă
             while (left.eating || right.eating) {
                 condition.await();
             }
@@ -71,7 +67,6 @@ class Philosopher extends Thread {
             table.unlock();
         }
 
-        // Simulează mâncatul
         System.out.println(name + " is eating");
         Thread.sleep(ThreadLocalRandom.current().nextInt(1000));
 
@@ -81,14 +76,12 @@ class Philosopher extends Thread {
         table.lock();
         try {
             eating = false;
-            // Semnalizează vecinilor că pot încerca să mănânce
             left.condition.signal();
             right.condition.signal();
         } finally {
             table.unlock();
         }
 
-        // Simulează gânditul
         System.out.println(name + " is thinking");
         Thread.sleep(ThreadLocalRandom.current().nextInt(1000));
     }
